@@ -4,8 +4,8 @@
 //
 // Exit codes: 0 every event is accepted by the validation; 1 an event would be refused; 2 the run could not start
 // (bad arguments, an unreadable or invalid plan, an entry too big for one batch).
-import { validateEvent } from '../../src/sync/validate.js';
 import { buildBatches, type BuildOptions } from './build.js';
+import { freeze, refusals, summaryLines } from './freeze.js';
 import { PlanError, parsePlan } from './plan.js';
 
 export interface Sink {
@@ -79,23 +79,8 @@ export async function main(argv: readonly string[], deps: MainDeps): Promise<num
     return 2;
   }
 
-  const ctx = { deviceHex: device, nowMicros: BigInt(at.getTime()) * 1000n };
-  const refused: string[] = [];
-  let events = 0;
-  for (const batch of built.batches) {
-    for (const w of batch.events) {
-      events += 1;
-      const verdict = validateEvent(w, ctx);
-      if (!verdict.ok) refused.push(`${w.line === '' ? '(names)' : w.line}: ${w.facetKey}: ${verdict.reason.split(':')[0]}`);
-    }
-  }
-
-  const byKind = (k: string) => plan.entries.filter((e) => e.kind === k).length;
-  const copies = plan.entries.filter((e) => e.kind !== 'parked').reduce((n, e) => n + e.copies, 0);
-  deps.stdout.write(`${plan.entries.length} entries: ${byKind('matched')} matched, ${byKind('text')} text, ${byKind('parked')} parked\n`);
-  deps.stdout.write(`${copies} copies, ${events} events in ${built.batches.length} batches\n`);
-  deps.stdout.write(`by family: ${Object.entries(built.counts).map(([f, n]) => `${f} ${n}`).join(', ')}\n`);
-  if (built.parked.length > 0) deps.stdout.write(`parked, not written: ${built.parked.join(', ')}\n`);
+  const refused = refusals(built, { deviceHex: device, nowMicros: BigInt(at.getTime()) * 1000n });
+  for (const line of summaryLines(plan, built)) deps.stdout.write(`${line}\n`);
 
   if (refused.length > 0) {
     deps.stderr.write(`${refused.length} events would be refused by the coordinator:\n`);
@@ -106,11 +91,7 @@ export async function main(argv: readonly string[], deps: MainDeps): Promise<num
 
   const out = args['--out'];
   if (out !== undefined) {
-    const batches = built.batches.map((b) => ({
-      clientId: b.clientId,
-      events: b.events.map((w) => ({ facetKey: w.facetKey, version: w.version, op: 'SYNC_OP_UPSERT', payload: w.payload, basis: w.basis })),
-    }));
-    await deps.writeFile(out, `${JSON.stringify(batches, null, 1)}\n`);
+    await deps.writeFile(out, freeze(built, opts).text);
     deps.stdout.write(`wrote ${out}\n`);
   }
   return 0;

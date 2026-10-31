@@ -38,6 +38,8 @@ export default defineConfig({
         'scripts/phase2-client/cli.ts',
         // The GK2 import's entrypoint, on the same terms: argv in, exit code out; the decisions are in main.ts.
         'scripts/gk2-import/cli.ts',
+        // The GK2 sender's entrypoint, on the same terms: argv in, exit code out; the decisions are in send.ts.
+        'scripts/gk2-import/send-cli.ts',
       ],
       thresholds: {
         // PER FILE, not a repo-wide average. The estate standard is 85% on

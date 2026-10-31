@@ -19,7 +19,8 @@
     "migrate": "sh scripts/migrate.sh",
     "proto:generate": "buf generate",
     "phase2": "tsx scripts/phase2-client/cli.ts",
-    "gk2-import": "tsx scripts/gk2-import/cli.ts"
+    "gk2-import": "tsx scripts/gk2-import/cli.ts",
+    "gk2-import:send": "tsx scripts/gk2-import/send-cli.ts"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.15.0",

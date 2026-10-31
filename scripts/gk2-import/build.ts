@@ -1,7 +1,7 @@
 // A plan as the exact facet writes a device would push: one Push per batch, a copy's head and status always in the
 // same batch (a status with no head is a hidden copy), every id derived from the plan's namespace and the line, every
 // payload the contract's own shape. Nothing here sends anything; main.ts runs each event through the coordinator's
-// Push validation, and a later step (not built) hands the batches to a signed-in device.
+// Push validation, and send.ts freezes them for a signed-in, enrolled device and pushes them.
 import { SyncOp, canonicalVersion, collNameKey, collectionRef, occFacetKey, occTagKey, parseUserFacetKey, tagNameKey, ufFacetKey } from '@figurecollecting/fc-api-contract';
 import { uuidV5 } from './ids.js';
 import type { Entry, Plan } from './plan.js';
